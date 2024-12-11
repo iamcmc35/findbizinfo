@@ -4,28 +4,28 @@ from bs4 import BeautifulSoup
 import pandas as pd
 
 def fetch_bizinfo_data(keyword):
-    url = "https://www.bizinfo.go.kr/web/contents/bizinfo/BD_main.jsp"
+    url = "https://www.bizinfo.go.kr/uss/rss/bizRss/a/selectBizRssList.do"
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
     }
-    
+
     # 검색 결과 가져오기
-    params = {"query": keyword}
+    params = {"searchCnd": "All", "searchWrd": keyword}
     response = requests.get(url, headers=headers, params=params)
-    
+
     if response.status_code != 200:
         st.error("Failed to fetch data from Bizinfo.")
         return []
 
     soup = BeautifulSoup(response.content, "html.parser")
 
-    # 검색 결과 파싱 (예: 테이블이나 카드 형식에서 추출)
+    # 검색 결과 파싱 (예: RSS 데이터 파싱)
     data = []
-    results = soup.find_all("div", class_="result-item")  # 실제 HTML 구조에 맞게 수정 필요
+    results = soup.find_all("item")  # RSS 형식에 맞게 수정
     for item in results:
-        title = item.find("h3").get_text(strip=True)
-        link = item.find("a")["href"]
-        date = item.find("span", class_="date").get_text(strip=True)
+        title = item.find("title").get_text(strip=True)
+        link = item.find("link").get_text(strip=True)
+        date = item.find("pubDate").get_text(strip=True)
         data.append({"Title": title, "Link": link, "Date": date})
 
     return data
@@ -40,7 +40,7 @@ def main():
     if st.button("Search"):
         if keyword:
             data = fetch_bizinfo_data(keyword)
-            
+
             if data:
                 # 결과를 데이터프레임으로 표시
                 df = pd.DataFrame(data)
