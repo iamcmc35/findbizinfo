@@ -1,41 +1,40 @@
 import streamlit as st
 import requests
-from bs4 import BeautifulSoup
 import pandas as pd
 from datetime import datetime, timedelta
 
-def search_google(keyword, start_date, end_date):
-    url = "https://www.google.com/search"
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
-    }
+def search_google_api(keyword, start_date, end_date):
+    api_key = "YOUR_API_KEY"  # 구글 API 키 입력
+    cx = "YOUR_CX_ID"  # Custom Search Engine ID 입력
 
+    # API 요청 URL
+    url = f"https://www.googleapis.com/customsearch/v1"
     params = {
+        "key": api_key,
+        "cx": cx,
         "q": f"{keyword} 지원사업 filetype:pdf",
-        "tbs": f"cdr:1,cd_min:{start_date},cd_max:{end_date}",
+        "sort": f"date:r:{start_date}:{end_date}",
         "hl": "ko"
     }
 
-    response = requests.get(url, headers=headers, params=params)
+    response = requests.get(url, params=params)
 
     if response.status_code != 200:
-        st.error("Failed to fetch data from Google.")
+        st.error("Failed to fetch data from Google API.")
         return []
 
-    soup = BeautifulSoup(response.text, "html.parser")
-
+    results = response.json().get("items", [])
     data = []
-    results = soup.find_all("div", class_="tF2Cxc")  # Google search result container
     for result in results:
-        title = result.find("h3").get_text(strip=True)
-        link = result.find("a")["href"]
+        title = result.get("title")
+        link = result.get("link")
         data.append({"Title": title, "Link": link})
 
     return data
 
 def main():
     st.title("Google Support Project Searcher")
-    st.write("Search for support project announcements on Google and download related PDFs.")
+    st.write("Search for support project announcements using Google Custom Search API and download related PDFs.")
 
     # 키워드 입력
     keyword = st.text_input("Enter keyword to search for:")
@@ -43,13 +42,13 @@ def main():
     # 날짜 입력
     col1, col2 = st.columns(2)
     with col1:
-        start_date = st.date_input("Start date", datetime.now() - timedelta(days=7))
+        start_date = st.date_input("Start date", datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
     with col2:
-        end_date = st.date_input("End date", datetime.now())
+        end_date = st.date_input("End date", datetime.now()).strftime("%Y-%m-%d")
 
     if st.button("Search"):
         if keyword and start_date and end_date:
-            data = search_google(keyword, start_date.strftime("%Y-%m-%d"), end_date.strftime("%Y-%m-%d"))
+            data = search_google_api(keyword, start_date, end_date)
 
             if data:
                 # 결과를 데이터프레임으로 표시
