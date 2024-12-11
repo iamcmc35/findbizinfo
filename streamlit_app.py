@@ -4,15 +4,14 @@ from bs4 import BeautifulSoup
 import pandas as pd
 from datetime import datetime, timedelta
 
-def search_bing(keyword, start_date, end_date):
+def search_bing(keyword):
     url = "https://www.bing.com/search"
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36"
     }
 
     params = {
-        "q": f"{keyword} 지원사업 filetype:pdf",  # PDF 파일 검색
-        "filters": f"ex1:date:r:{start_date}..{end_date}"  # 날짜 범위 필터
+        "q": f"{keyword} 지원사업 filetype:pdf"  # PDF 파일 검색
     }
 
     response = requests.get(url, headers=headers, params=params)
@@ -42,16 +41,9 @@ def main():
     # 키워드 입력
     keyword = st.text_input("Enter keyword to search for:")
 
-    # 날짜 입력
-    col1, col2 = st.columns(2)
-    with col1:
-        start_date = st.date_input("Start date", datetime.now() - timedelta(days=7)).strftime("%Y-%m-%d")
-    with col2:
-        end_date = st.date_input("End date", datetime.now()).strftime("%Y-%m-%d")
-
     if st.button("Search"):
-        if keyword and start_date and end_date:
-            data = search_bing(keyword, start_date, end_date)
+        if keyword:
+            data = search_bing(keyword)
 
             if data:
                 # 결과를 데이터프레임으로 표시
@@ -72,9 +64,9 @@ def main():
                     if item["Link"].endswith(".pdf"):
                         st.write(f"[Download PDF]({item['Link']})")
             else:
-                st.warning("No results found for the given keyword and date range.")
+                st.warning("No results found for the given keyword.")
         else:
-            st.warning("Please enter a keyword and select a date range.")
+            st.warning("Please enter a keyword.")
 
 if __name__ == "__main__":
     main()
