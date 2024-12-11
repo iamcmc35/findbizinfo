@@ -12,7 +12,7 @@ def search_bing(keyword, start_date, end_date):
 
     params = {
         "q": f"{keyword} 지원사업 filetype:pdf",  # PDF 파일 검색
-        "filters": f"ex1:"date:r:{start_date}..{end_date}"",  # 날짜 범위 필터
+        "filters": f"ex1:date:r:{start_date}..{end_date}"  # 날짜 범위 필터
     }
 
     response = requests.get(url, headers=headers, params=params)
